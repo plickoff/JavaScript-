@@ -1,0 +1,34 @@
+body{
+  font-family: "Helvetica","Arial",sans-serif;
+  color: #333;
+  background-color: #cba8a8;
+  margin:1em 10%;/* 边缘 */
+}
+h1 {
+  color: #c60;
+  background-color: transparent;
+
+}
+a{
+  color:#c60;
+  background-color: transparent;
+  font-weight: bold;
+  text-decoration: none;
+}
+ul{
+  padding: 0;
+}
+li{
+  float:left;
+  padding: 1em;/* 1em=16px */
+  list-style: none;
+}
+#imagegallery{
+  list-style: none;
+}
+#imagegallery li{
+  display: inline;
+}
+#imagegallery li a img{
+  border: 0;
+}
