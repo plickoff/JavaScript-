@@ -124,10 +124,7 @@ function makeGame(url) {
             dragging = null, draggingL, draggingT, dear, dearL, dearT, top, left, effectEnd,
             posArray = [], posArray_bak = [], canvas = getId('gameCanvas'), vvgBox = getId('vvgBox'), successTimer;
     // posx,posy 为鼠标相对于拖动对象的左上角距离， sLeft sTop 为拖动对象的初始位置
-    var posx, posy, zindex = 0, isMouseMove;
-    // console.info(posx);
-    // console.info(posy);
-    // console.info(zindex);
+    var posx, posy, zindex = 0, isMouseMove;//var posx,posy,zindex,isMouseMove;
 
     var imgWidth, imgHeight;
     var img = new Image();
@@ -137,7 +134,7 @@ function makeGame(url) {
         //获取图片的尺寸
         imgWidth = img.width;
         imgHeight = img.height;
-        var myw = Math.floor(imgWidth / 4),
+        var myw = Math.floor(imgWidth / 4),//四舍五入
                 myh = Math.floor(imgHeight / 4);
         vvgBox.style.width = imgWidth + 'px';
         vvgBox.style.height = imgHeight + 'px';
