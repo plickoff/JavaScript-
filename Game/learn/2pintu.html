@@ -125,6 +125,10 @@ function makeGame(url) {
             posArray = [], posArray_bak = [], canvas = getId('gameCanvas'), vvgBox = getId('vvgBox'), successTimer;
     // posx,posy 为鼠标相对于拖动对象的左上角距离， sLeft sTop 为拖动对象的初始位置
     var posx, posy, zindex = 0, isMouseMove;
+    // console.info(posx);
+    // console.info(posy);
+    // console.info(zindex);
+
     var imgWidth, imgHeight;
     var img = new Image();
     img.src = url;
