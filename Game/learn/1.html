@@ -1,0 +1,640 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+002	<html xmlns="http://www.w3.org/1999/xhtml">
+003	<head>
+004	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+005	<title>Javascript写的躲人游戏  - 分享JavaScript-sharejs.com</title>
+006	<meta name="Copyright" content="JavaScript分享网 http://www.sharejs.com/" />
+007	<meta name="description" content="Javascript写的躲人游戏 ,JavaScript分享网" />
+008	<meta content="JavaScript,分享,JavaScript代码,Ajax" name="keywords" />
+009	<SCRIPT language=JavaScript type=text/javascript>
+010	isNS4 = (document.layers) ? true : false;
+011	isIE4 = (document.all && !document.getElementById) ? true : false;
+012	isIE5 = (document.all && document.getElementById) ? true : false;
+013	isNS6 = (!document.all && document.getElementById) ? true : false;
+014	var curX, curY, curX2, curY2, boxX, boxY, moving=0, touch=0;
+015	var gametime=0, started=0, speed;
+016	var starttime, endtime, finaltime=0; //pass finaltime to popup window to ask for initials
+017	var enemyxdir = new Array(1,1,1,1);
+018	var enemyydir = new Array(1,1,1,1);
+019	if (isNS4 || isNS6){
+020	document.captureEvents(Event.MOUSEUP|Event.MOUSEDOWN|Event.MOUSEMOVE);
+021	}
+022	document.onmousedown = start;
+023	document.onmousemove = checkLocation;
+024	document.onmouseup = stop;
+025	function startclock() {var today = new Date(); starttime = today.getTime();}
+026	function endclock() {var today = new Date(); endtime = today.getTime();}
+027	function calctime() {var time = (endtime - starttime - 0)/1000; return time;}
+028	function giveposX(divname) {
+029	if (isNS4) var posLeft = document.layers[divname].left;
+030	else if (isIE4 || isIE5) var posLeft = document.all(divname).style.pixelLeft;
+031	else if (isNS6) var posLeft = parseInt(document.getElementById(divname).style.left + "");
+032	return posLeft;
+033	}
+034	function giveposY(divname) {
+035	if (isNS4) var posTop = document.layers[divname].top;
+036	else if (isIE4 || isIE5) var posTop = document.all(divname).style.pixelTop;
+037	else if (isNS6) var posTop = parseInt(document.getElementById(divname).style.top + "");
+038	return posTop;
+039	}
+040	function setposX(divname, xpos) {
+041	if (isNS4) document.layers[divname].left = xpos;
+042	else if (isIE4 || isIE5) document.all(divname).style.pixelLeft = xpos;
+043	else if (isNS6) document.getElementById(divname).style.left = xpos;
+044	}
+045	function setposY(divname, ypos) {
+046	if (isNS4) document.layers[divname].top = ypos;
+047	else if (isIE4 || isIE5) document.all(divname).style.pixelTop = ypos;
+048	else if (isNS6) document.getElementById(divname).style.top = ypos;
+049	}
+050	function givesize(divname, dimension) {
+051	var divsize = 0;
+052	if (dimension == 'y') {
+053	if (isNS4) divsize = document.layers[divname].clip.height;
+054	else if (isIE4 || isIE5) divsize = document.all(divname).style.pixelHeight;
+055	else if (isNS6) divsize = parseInt(document.getElementById(divname).style.height + "");
+056	}
+057	else if (dimension == 'x') {
+058	if (isNS4) divsize = document.layers[divname].clip.width;
+059	else if (isIE4 || isIE5) divsize = document.all(divname).style.pixelWidth;
+060	else if (isNS6) divsize = parseInt(document.getElementById(divname).style.width + "");
+061	}
+062	return divsize;
+063	}
+064	// check to see if 'box' is touching 'enemy1'
+065	function checktouching(num) {
+066	var enemy = "enemy" + num + ""
+067	var difX = giveposX('box') - giveposX(enemy) - 0; // -0 converts to integer
+068	var difY = giveposY('box') - giveposY(enemy) - 0;
+069	// set touch = 1 if it is touching an enemy
+070	if (difX > (-1 * givesize('box', 'x')) && difX < givesize(enemy, 'x') && difY > (-1 * givesize('box', 'y')) && difY < givesize(enemy, 'y')) {
+071	touch = 1;
+072	}
+073	else touch = 0;
+074	}
+075	function movenemy(num,step_x,step_y){
+076	var enemy = "enemy" + num + ""
+077	var enemyx = givesize(enemy, 'x');
+078	var enemyy = givesize(enemy, 'y');
+079	if (giveposX(enemy) >= (450 - enemyx) || giveposX(enemy) <= 0) {
+080	enemyxdir[num] = -1 * enemyxdir[num];
+081	}
+082	if (giveposY(enemy) >= (450 - enemyy) || giveposY(enemy) <= 0) {
+083	enemyydir[num] = -1 * enemyydir[num];
+084	}
+085	var newposx = giveposX(enemy) + (step_x*enemyxdir[num]) + 0;
+086	var newposy = giveposY(enemy) + (step_y*enemyydir[num]) + 0;
+087	setposX(enemy, newposx);
+088	setposY(enemy, newposy);
+089	checktouching(num + "");
+090	if (touch == 1) {
+091	stop(); reset();
+092	}
+093	}
+094	function movenemies() {
+095	gametime = gametime + 1
+096	if (gametime >= 0 && gametime < 100) speed = 80;
+097	else if (gametime >= 100 &&  gametime < 200) speed = 60;
+098	else if (gametime >= 200 &&  gametime < 300) speed = 40;
+099	else if (gametime >= 300 &&  gametime < 400) speed = 30;
+100	else if (gametime >= 400 &&  gametime < 500) speed = 20;
+101	else speed = 10;
+102	// window.status = "speed:  " + speed + "   gametime: " + gametime;
+103	movenemy(0,-10,12);
+104	movenemy(1,-12,-20);
+105	movenemy(2,15,-13);
+106	movenemy(3,17,11);
+107	setTimeout(movenemies,speed);
+108	}
+109	function start(e) {
+110	if (started == 0) { movenemies();   startclock();   started = 1;    }
+111	curX = (isNS4 || isNS6) ? e.pageX : window.event.x ;
+112	curY = (isNS4 || isNS6) ? e.pageY : window.event.y ;
+113	curX2 = eval(curX - 40);
+114	curY2 = eval(curY - 40);
+115	boxX = eval(curX - 20);
+116	boxY = eval(curY - 20);
+117	var boxleft = giveposX('box');
+118	var boxtop = giveposY('box');
+119	if (curX > boxleft && curX2 < boxleft && curY > boxtop && curY2 < boxtop) {
+120	moving = 1;
+121	setposX('box', boxX);
+122	setposY('box', boxY);
+123	if (isNS4 || isNS6){
+124	document.captureEvents(Event.MOUSEMOVE);
+125	}
+126	}
+127	}
+128	function stop(e){
+129	moving=0;
+130	if (isNS4 || isNS6){
+131	document.releaseEvents(Event.MOUSEMOVE);
+132	}
+133	}
+134	function reset(e){
+135	endclock();
+136	moving=0;
+137	if (isNS4 || isNS6){
+138	document.releaseEvents(Event.MOUSEMOVE);
+139	}
+140	if (finaltime == 0) {
+141	finaltime = calctime();
+142	window.alert('You hold ' + finaltime + ' seconds... salutations Fp');
+143	//      var entername = window.confirm('Enter your name?');
+144	//          if (entername) {
+145	//          window.open("?" + finaltime,'winwin','width=300,height=500,left=40,top=40,status=1,resizable');
+146	//          document.location.reload();
+147	//          }
+148	//          else document.location.reload();
+149	document.location.reload();
+150	}
+151	}
+152	function checkLocation(e){
+153	curX = (isNS4 || isNS6) ? e.pageX : window.event.x ;
+154	curY = (isNS4 || isNS6) ? e.pageY : window.event.y ;
+155	boxX = eval(curX - 20);
+156	boxY = eval(curY - 20);
+157	checktouching('1');
+158	if (moving == 1 && touch == 0){
+159	setposX('box',boxX);
+160	setposY('box',boxY);
+161	if (curY > 69 && curX > 69 && curY < 381 && curX < 381) return false;
+162	else stop(); reset();
+163	}
+164	else if (touch == 1){
+165	stop(); reset();
+166	}
+167	}
+168	</SCRIPT>
+169
+170	</head>
+171	<BODY text=#000000 bgColor=#ffffff leftMargin=0 topMargin=0 marginwidth="0"
+172	marginheight="0">
+173	<DIV id=box
+174	style="LEFT: 205px; WIDTH: 40px; POSITION: absolute; TOP: 205px; HEIGHT: 40px; BACKGROUND-COLOR: #990000; layer-background-color: #990000">
+175	<TABLE height=40 width=40>
+176	<TBODY>
+177	<TR>
+178	<TD>&nbsp;</TD></TD></TR></TBODY></TABLE></DIV>
+179	<DIV id=enemy0
+180	style="LEFT: 270px; WIDTH: 60px; POSITION: absolute; TOP: 60px; HEIGHT: 50px; BACKGROUND-COLOR: #000099; layer-background-color: #000099">
+181	<TABLE height=50 width=60>
+182	<TBODY>
+183	<TR>
+184	<TD>&nbsp;</TD></TR></TBODY></TABLE></DIV>
+185	<DIV id=enemy1
+186	style="LEFT: 300px; WIDTH: 100px; POSITION: absolute; TOP: 330px; HEIGHT: 20px; BACKGROUND-COLOR: #000099; layer-background-color: #000099">
+187	<TABLE height=20 width=100>
+188	<TBODY>
+189	<TR>
+190	<TD>&nbsp;</TD></TR></TBODY></TABLE></DIV>
+191	<DIV id=enemy2
+192	style="LEFT: 70px; WIDTH: 30px; POSITION: absolute; TOP: 320px; HEIGHT: 60px; BACKGROUND-COLOR: #000099; layer-background-color: #000099">
+193	<TABLE height=60 width=30>
+194	<TBODY>
+195	<TR>
+196	<TD>&nbsp;</TD></TR></TBODY></TABLE></DIV>
+197	<DIV id=enemy3
+198	style="LEFT: 70px; WIDTH: 60px; POSITION: absolute; TOP: 70px; HEIGHT: 60px; BACKGROUND-COLOR: #000099; layer-background-color: #000099">
+199	<TABLE height=60 width=60>
+200	<TBODY>
+201	<TR>
+202	<TD>&nbsp;</TD></TR></TBODY></TABLE></DIV>
+203	<TABLE cellSpacing=0 cellPadding=0 border=0><!-- row 1 -->
+204	<TBODY>
+205	<TR>
+206	<TD width=50 bgColor=#000000 height=50>
+207	<TABLE>
+208	<TBODY>
+209	<TR>
+210	<TD></TD></TR></TBODY></TABLE></TD>
+211	<TD width=50 bgColor=#000000 height=50>
+212	<TABLE>
+213	<TBODY>
+214	<TR>
+215	<TD></TD></TR></TBODY></TABLE></TD>
+216	<TD width=50 bgColor=#000000 height=50>
+217	<TABLE>
+218	<TBODY>
+219	<TR>
+220	<TD></TD></TR></TBODY></TABLE></TD>
+221	<TD width=50 bgColor=#000000 height=50>
+222	<TABLE>
+223	<TBODY>
+224	<TR>
+225	<TD></TD></TR></TBODY></TABLE></TD>
+226	<TD width=50 bgColor=#000000 height=50>
+227	<TABLE>
+228	<TBODY>
+229	<TR>
+230	<TD></TD></TR></TBODY></TABLE></TD>
+231	<TD width=50 bgColor=#000000 height=50>
+232	<TABLE>
+233	<TBODY>
+234	<TR>
+235	<TD></TD></TR></TBODY></TABLE></TD>
+236	<TD width=50 bgColor=#000000 height=50>
+237	<TABLE>
+238	<TBODY>
+239	<TR>
+240	<TD></TD></TR></TBODY></TABLE></TD>
+241	<TD width=50 bgColor=#000000 height=50>
+242	<TABLE>
+243	<TBODY>
+244	<TR>
+245	<TD></TD></TR></TBODY></TABLE></TD>
+246	<TD width=50 bgColor=#000000 height=50>
+247	<TABLE>
+248	<TBODY>
+249	<TR>
+250	<TD></TD></TR></TBODY></TABLE></TD></TR><!-- row 2 -->
+251	<TR>
+252	<TD width=50 bgColor=#000000 height=50>
+253	<TABLE>
+254	<TBODY>
+255	<TR>
+256	<TD></TD></TR></TBODY></TABLE></TD>
+257	<TD width=50 height=50>
+258	<TABLE>
+259	<TBODY>
+260	<TR>
+261	<TD></TD></TR></TBODY></TABLE></TD>
+262	<TD width=50 height=50>
+263	<TABLE>
+264	<TBODY>
+265	<TR>
+266	<TD></TD></TR></TBODY></TABLE></TD>
+267	<TD width=50 height=50>
+268	<TABLE>
+269	<TBODY>
+270	<TR>
+271	<TD></TD></TR></TBODY></TABLE></TD>
+272	<TD width=50 height=50>
+273	<TABLE>
+274	<TBODY>
+275	<TR>
+276	<TD></TD></TR></TBODY></TABLE></TD>
+277	<TD width=50 height=50>
+278	<TABLE>
+279	<TBODY>
+280	<TR>
+281	<TD></TD></TR></TBODY></TABLE></TD>
+282	<TD width=50 height=50>
+283	<TABLE>
+284	<TBODY>
+285	<TR>
+286	<TD></TD></TR></TBODY></TABLE></TD>
+287	<TD width=50 height=50>
+288	<TABLE>
+289	<TBODY>
+290	<TR>
+291	<TD></TD></TR></TBODY></TABLE></TD>
+292	<TD width=50 bgColor=#000000 height=50>
+293	<TABLE>
+294	<TBODY>
+295	<TR>
+296	<TD></TD></TR></TBODY></TABLE></TD></TR><!-- row 3 -->
+297	<TR>
+298	<TD width=50 bgColor=#000000 height=50>
+299	<TABLE>
+300	<TBODY>
+301	<TR>
+302	<TD></TD></TR></TBODY></TABLE></TD>
+303	<TD width=50 height=50>
+304	<TABLE>
+305	<TBODY>
+306	<TR>
+307	<TD></TD></TR></TBODY></TABLE></TD>
+308	<TD width=50 height=50>
+309	<TABLE>
+310	<TBODY>
+311	<TR>
+312	<TD></TD></TR></TBODY></TABLE></TD>
+313	<TD width=50 height=50>
+314	<TABLE>
+315	<TBODY>
+316	<TR>
+317	<TD></TD></TR></TBODY></TABLE></TD>
+318	<TD width=50 height=50>
+319	<TABLE>
+320	<TBODY>
+321	<TR>
+322	<TD></TD></TR></TBODY></TABLE></TD>
+323	<TD width=50 height=50>
+324	<TABLE>
+325	<TBODY>
+326	<TR>
+327	<TD></TD></TR></TBODY></TABLE></TD>
+328	<TD width=50 height=50>
+329	<TABLE>
+330	<TBODY>
+331	<TR>
+332	<TD></TD></TR></TBODY></TABLE></TD>
+333	<TD width=50 height=50>
+334	<TABLE>
+335	<TBODY>
+336	<TR>
+337	<TD></TD></TR></TBODY></TABLE></TD>
+338	<TD width=50 bgColor=#000000 height=50>
+339	<TABLE>
+340	<TBODY>
+341	<TR>
+342	<TD></TD></TR></TBODY></TABLE></TD></TR><!-- row 4 -->
+343	<TR>
+344	<TD width=50 bgColor=#000000 height=50>
+345	<TABLE>
+346	<TBODY>
+347	<TR>
+348	<TD></TD></TR></TBODY></TABLE></TD>
+349	<TD width=50 height=50>
+350	<TABLE>
+351	<TBODY>
+352	<TR>
+353	<TD></TD></TR></TBODY></TABLE></TD>
+354	<TD width=50 height=50>
+355	<TABLE>
+356	<TBODY>
+357	<TR>
+358	<TD></TD></TR></TBODY></TABLE></TD>
+359	<TD width=50 height=50>
+360	<TABLE>
+361	<TBODY>
+362	<TR>
+363	<TD></TD></TR></TBODY></TABLE></TD>
+364	<TD width=50 height=50>
+365	<TABLE>
+366	<TBODY>
+367	<TR>
+368	<TD></TD></TR></TBODY></TABLE></TD>
+369	<TD width=50 height=50>
+370	<TABLE>
+371	<TBODY>
+372	<TR>
+373	<TD></TD></TR></TBODY></TABLE></TD>
+374	<TD width=50 height=50>
+375	<TABLE>
+376	<TBODY>
+377	<TR>
+378	<TD></TD></TR></TBODY></TABLE></TD>
+379	<TD width=50 height=50>
+380	<TABLE>
+381	<TBODY>
+382	<TR>
+383	<TD></TD></TR></TBODY></TABLE></TD>
+384	<TD width=50 bgColor=#000000 height=50>
+385	<TABLE>
+386	<TBODY>
+387	<TR>
+388	<TD></TD></TR></TBODY></TABLE></TD></TR><!-- row 5 -->
+389	<TR>
+390	<TD width=50 bgColor=#000000 height=50>
+391	<TABLE>
+392	<TBODY>
+393	<TR>
+394	<TD></TD></TR></TBODY></TABLE></TD>
+395	<TD width=50 height=50>
+396	<TABLE>
+397	<TBODY>
+398	<TR>
+399	<TD></TD></TR></TBODY></TABLE></TD>
+400	<TD width=50 height=50>
+401	<TABLE>
+402	<TBODY>
+403	<TR>
+404	<TD></TD></TR></TBODY></TABLE></TD>
+405	<TD width=50 height=50>
+406	<TABLE>
+407	<TBODY>
+408	<TR>
+409	<TD></TD></TR></TBODY></TABLE></TD>
+410	<TD width=50 height=50>
+411	<TABLE>
+412	<TBODY>
+413	<TR>
+414	<TD></TD></TR></TBODY></TABLE></TD>
+415	<TD width=50 height=50>
+416	<TABLE>
+417	<TBODY>
+418	<TR>
+419	<TD></TD></TR></TBODY></TABLE></TD>
+420	<TD width=50 height=50>
+421	<TABLE>
+422	<TBODY>
+423	<TR>
+424	<TD></TD></TR></TBODY></TABLE></TD>
+425	<TD width=50 height=50>
+426	<TABLE>
+427	<TBODY>
+428	<TR>
+429	<TD></TD></TR></TBODY></TABLE></TD>
+430	<TD width=50 bgColor=#000000 height=50>
+431	<TABLE>
+432	<TBODY>
+433	<TR>
+434	<TD></TD></TR></TBODY></TABLE></TD></TR><!-- row 6 -->
+435	<TR>
+436	<TD width=50 bgColor=#000000 height=50>
+437	<TABLE>
+438	<TBODY>
+439	<TR>
+440	<TD></TD></TR></TBODY></TABLE></TD>
+441	<TD width=50 height=50>
+442	<TABLE>
+443	<TBODY>
+444	<TR>
+445	<TD></TD></TR></TBODY></TABLE></TD>
+446	<TD width=50 height=50>
+447	<TABLE>
+448	<TBODY>
+449	<TR>
+450	<TD></TD></TR></TBODY></TABLE></TD>
+451	<TD width=50 height=50>
+452	<TABLE>
+453	<TBODY>
+454	<TR>
+455	<TD></TD></TR></TBODY></TABLE></TD>
+456	<TD width=50 height=50>
+457	<TABLE>
+458	<TBODY>
+459	<TR>
+460	<TD></TD></TR></TBODY></TABLE></TD>
+461	<TD width=50 height=50>
+462	<TABLE>
+463	<TBODY>
+464	<TR>
+465	<TD></TD></TR></TBODY></TABLE></TD>
+466	<TD width=50 height=50>
+467	<TABLE>
+468	<TBODY>
+469	<TR>
+470	<TD></TD></TR></TBODY></TABLE></TD>
+471	<TD width=50 height=50>
+472	<TABLE>
+473	<TBODY>
+474	<TR>
+475	<TD></TD></TR></TBODY></TABLE></TD>
+476	<TD width=50 bgColor=#000000 height=50>
+477	<TABLE>
+478	<TBODY>
+479	<TR>
+480	<TD></TD></TR></TBODY></TABLE></TD></TR><!-- row 7 -->
+481	<TR>
+482	<TD width=50 bgColor=#000000 height=50>
+483	<TABLE>
+484	<TBODY>
+485	<TR>
+486	<TD></TD></TR></TBODY></TABLE></TD>
+487	<TD width=50 height=50>
+488	<TABLE>
+489	<TBODY>
+490	<TR>
+491	<TD></TD></TR></TBODY></TABLE></TD>
+492	<TD width=50 height=50>
+493	<TABLE>
+494	<TBODY>
+495	<TR>
+496	<TD></TD></TR></TBODY></TABLE></TD>
+497	<TD width=50 height=50>
+498	<TABLE>
+499	<TBODY>
+500	<TR>
+501	<TD></TD></TR></TBODY></TABLE></TD>
+502	<TD width=50 height=50>
+503	<TABLE>
+504	<TBODY>
+505	<TR>
+506	<TD></TD></TR></TBODY></TABLE></TD>
+507	<TD width=50 height=50>
+508	<TABLE>
+509	<TBODY>
+510	<TR>
+511	<TD></TD></TR></TBODY></TABLE></TD>
+512	<TD width=50 height=50>
+513	<TABLE>
+514	<TBODY>
+515	<TR>
+516	<TD></TD></TR></TBODY></TABLE></TD>
+517	<TD width=50 height=50>
+518	<TABLE>
+519	<TBODY>
+520	<TR>
+521	<TD></TD></TR></TBODY></TABLE></TD>
+522	<TD width=50 bgColor=#000000 height=50>
+523	<TABLE>
+524	<TBODY>
+525	<TR>
+526	<TD></TD></TR></TBODY></TABLE></TD></TR><!-- row 8 -->
+527	<TR>
+528	<TD width=50 bgColor=#000000 height=50>
+529	<TABLE>
+530	<TBODY>
+531	<TR>
+532	<TD></TD></TR></TBODY></TABLE></TD>
+533	<TD width=50 height=50>
+534	<TABLE>
+535	<TBODY>
+536	<TR>
+537	<TD></TD></TR></TBODY></TABLE></TD>
+538	<TD width=50 height=50>
+539	<TABLE>
+540	<TBODY>
+541	<TR>
+542	<TD></TD></TR></TBODY></TABLE></TD>
+543	<TD width=50 height=50>
+544	<TABLE>
+545	<TBODY>
+546	<TR>
+547	<TD></TD></TR></TBODY></TABLE></TD>
+548	<TD width=50 height=50>
+549	<TABLE>
+550	<TBODY>
+551	<TR>
+552	<TD></TD></TR></TBODY></TABLE></TD>
+553	<TD width=50 height=50>
+554	<TABLE>
+555	<TBODY>
+556	<TR>
+557	<TD></TD></TR></TBODY></TABLE></TD>
+558	<TD width=50 height=50>
+559	<TABLE>
+560	<TBODY>
+561	<TR>
+562	<TD></TD></TR></TBODY></TABLE></TD>
+563	<TD width=50 height=50>
+564	<TABLE>
+565	<TBODY>
+566	<TR>
+567	<TD></TD></TR></TBODY></TABLE></TD>
+568	<TD width=50 bgColor=#000000 height=50>
+569	<TABLE>
+570	<TBODY>
+571	<TR>
+572	<TD></TD></TR></TBODY></TABLE></TD></TR><!-- row 9 -->
+573	<TR>
+574	<TD width=50 bgColor=#000000 height=50>
+575	<TABLE>
+576	<TBODY>
+577	<TR>
+578	<TD></TD></TR></TBODY></TABLE></TD>
+579	<TD width=50 bgColor=#000000 height=50>
+580	<TABLE>
+581	<TBODY>
+582	<TR>
+583	<TD></TD></TR></TBODY></TABLE></TD>
+584	<TD width=50 bgColor=#000000 height=50>
+585	<TABLE>
+586	<TBODY>
+587	<TR>
+588	<TD></TD></TR></TBODY></TABLE></TD>
+589	<TD width=50 bgColor=#000000 height=50>
+590	<TABLE>
+591	<TBODY>
+592	<TR>
+593	<TD></TD></TR></TBODY></TABLE></TD>
+594	<TD width=50 bgColor=#000000 height=50>
+595	<TABLE>
+596	<TBODY>
+597	<TR>
+598	<TD></TD></TR></TBODY></TABLE></TD>
+599	<TD width=50 bgColor=#000000 height=50>
+600	<TABLE>
+601	<TBODY>
+602	<TR>
+603	<TD></TD></TR></TBODY></TABLE></TD>
+604	<TD width=50 bgColor=#000000 height=50>
+605	<TABLE>
+606	<TBODY>
+607	<TR>
+608	<TD></TD></TR></TBODY></TABLE></TD>
+609	<TD width=50 bgColor=#000000 height=50>
+610	<TABLE>
+611	<TBODY>
+612	<TR>
+613	<TD></TD></TR></TBODY></TABLE></TD>
+614	<TD width=50 bgColor=#000000 height=50>
+615	<TABLE>
+616	<TBODY>
+617	<TR>
+618	<TD></TD></TR></TBODY></TABLE></TD></TR></TBODY></TABLE>
+619	<font face="verdana,arial,helvetica" size="2">
+620	<BR>&nbsp;</font><div style="position: absolute; width: 285px; height: 293px; z-index: 1; left: 467px; top: 32px" id="layer1">
+621	Click onto the red block with jump over it:<br>
+622	<br>
+623	Move the red block avoiding crash with the blue ones<br>
+624	<br>
+625	Don't touch the black edge.<br>
+626	<br>
+627	If you can reach more than 18 seconds, you are a genius.<br>
+628	<br>
+629	<br>
+630	It is said that the pilots from the US Air Force<br>
+631	are forced to reach 2 MINUTES.</div>
+632
+633
+634
+635	<br><br>
+636	<div align="center">
+637	获取更多JavaScript代码，请登录JavaScript分享网 <a href="http://www.sharejs.com">http://www.sharejs.com</a>
+638	</div>
+639	</body>
+640	</html>
