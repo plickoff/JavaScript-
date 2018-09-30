@@ -1,0 +1,21 @@
+body {
+  color:#fb5;
+  background-color: #334;
+}
+a:link{
+  color:#445;
+  background-color: #eb6;
+}
+a:visited{
+  color:#345;
+  background-color: #ebf;
+}
+a:hover{
+  color:#667;
+  background-color: #ec8;
+}
+a.active{
+  color: #778;
+  background-color: #ec8;
+}
+/*  hhhhhhh*/
