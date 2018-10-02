@@ -1,9 +1,9 @@
-var oldonload=window.onload;
 function addLoadEvent(func){
-if (typeof window.onload!="function"){
-  oldonload=func()
-}else{
-  window.onload;
-  func();
-  }
+  var oldonload = window.onload;
+  if (typeof oldonload=="function"){
+    window.onload;
+    func();
+}else {
+  window.onload=func;
+}
 }
